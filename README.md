@@ -5,5 +5,5 @@
 </p>
 
 <p align="center">
-    <img src="weatherapp_ss.png" align="center">
+    <img src="Screenshot_2.png" align="center">
 </p>
