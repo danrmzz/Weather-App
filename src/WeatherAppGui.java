@@ -1,12 +1,18 @@
 package src;
+import org.json.simple.JSONObject;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
 public class WeatherAppGui extends JFrame {
+    private JSONObject weatherData;
+
     public WeatherAppGui() {
         // setup the gui and add a title
         super("Weather App");
@@ -41,21 +47,13 @@ public class WeatherAppGui extends JFrame {
 
         add(searchTextField);
 
-        // search button
-        JButton searchButton = new JButton(loadImage("src/assets/search.png"));
-
-        // change the cursor to a hand cursor when hovering over search button
-        searchButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        searchButton.setBounds(375, 13, 47, 45);
-        add(searchButton);
-
         // weather image
-        JLabel weatherConditionImage = new JLabel(loadImage("src/assets/cloudy.png"));
+        JLabel weatherConditionImage = new JLabel(loadImage("src/assets/clear.png"));
         weatherConditionImage.setBounds(0, 125, 450, 217);
         add(weatherConditionImage);
 
         // temperature text
-        JLabel temperatureText = new JLabel("10 C");
+        JLabel temperatureText = new JLabel("?? °F");
         temperatureText.setBounds(0, 350, 450, 54);
         temperatureText.setFont(new Font("Dialog", Font.BOLD, 48));
 
@@ -64,7 +62,7 @@ public class WeatherAppGui extends JFrame {
         add(temperatureText);
 
         // weather condition description
-        JLabel weatherConditionDesc = new JLabel("Cloudy");
+        JLabel weatherConditionDesc = new JLabel("Clear");
         weatherConditionDesc.setBounds(0, 405, 450, 36);
         weatherConditionDesc.setFont(new Font("Dialog", Font.PLAIN, 32));
         weatherConditionDesc.setHorizontalAlignment(SwingConstants.CENTER);
@@ -76,7 +74,7 @@ public class WeatherAppGui extends JFrame {
         add(humidityImage);
 
         // humidity text
-        JLabel humidityText = new JLabel("<html><b>Humidity</b> 100%</html>");
+        JLabel humidityText = new JLabel("<html><b>Humidity</b> ??%</html>");
         humidityText.setBounds(90, 500, 85, 55);
         humidityText.setFont(new Font("Dialog", Font.PLAIN, 16));
         add(humidityText);
@@ -87,10 +85,70 @@ public class WeatherAppGui extends JFrame {
         add(windspeedImage);
 
         // windspeed text
-        JLabel windspeedText = new JLabel("<html><b>Windspeed</b> 15km/h</html>");
+        JLabel windspeedText = new JLabel("<html><b>Windspeed</b> ??mph</html>");
         windspeedText.setBounds(310, 500, 85, 55);
         windspeedText.setFont(new Font("Dialog", Font.PLAIN, 16));
         add(windspeedText);
+
+        // search button
+        JButton searchButton = new JButton(loadImage("src/assets/search.png"));
+
+        // change the cursor to a hand cursor when hovering over search button
+        searchButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        searchButton.setBounds(375, 13, 47, 45);
+        searchButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // get location from user
+                String userInput = searchTextField.getText();
+
+                // validate input - remove whitespace to ensure non-empty text
+                if (userInput.replaceAll("//s", "").length() <= 0) {
+                    return;
+                }
+
+                // retrieve weather data
+                weatherData = WeatherApp.getWeatherData(userInput);
+
+                // update gui
+
+                // update weather image
+                String weatherCondition = (String) weatherData.get("weather_condition");
+
+                // depending on the condition, update the weather image that corresponds with the condition
+                switch (weatherCondition) {
+                    case "Clear":
+                        weatherConditionImage.setIcon(loadImage("src/assets/clear.png"));
+                        break;
+                    case "Cloudy":
+                        weatherConditionImage.setIcon(loadImage("src/assets/cloudy.png"));
+                        break;
+                    case "Rain":
+                        weatherConditionImage.setIcon(loadImage("src/assets/rain.png"));
+                        break;
+                    case "Snow":
+                        weatherConditionImage.setIcon(loadImage("src/assets/snow.png"));
+                        break;
+                }
+
+                // update temperature text
+                int temperature = (int) weatherData.get("temperature");
+                temperatureText.setText(temperature + " °F");
+
+                // update weather condition text
+                weatherConditionDesc.setText(weatherCondition);
+
+                // update humidity text
+                long humidity = (long) weatherData.get("humidity");
+                humidityText.setText("<html><b>Humidity</b><br>" + humidity + "%</html>");
+
+                // update windspeed text
+                int windspeed = (int) weatherData.get("windspeed");
+                windspeedText.setText("<html><b>Windspeed</b> " + windspeed + "mph</html>");
+
+            }
+        });
+        add(searchButton);
     }
 
     // used to create images in the gui components
